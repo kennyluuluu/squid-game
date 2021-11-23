@@ -7,6 +7,20 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.z = 5;
 
+// GLOBAL VARIABLES
+const start_position = 3;
+const end_position = -start_position;
+
+function createCube(size, positionX, rotationY = 0, color = 0xfbc851) {
+  const geometry = new THREE.BoxGeometry(size.w, size.h, size.d);
+  const material = new THREE.MeshBasicMaterial({ color: color });
+  const cube = new THREE.Mesh(geometry, material);
+  cube.position.x = positionX;
+  cube.rotation.y = rotationY;
+  scene.add(cube);
+  return cube;
+}
+
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -56,13 +70,18 @@ class Doll {
   }
 }
 
+function createTrack() {
+  createCube(
+    { w: start_position * 2 + 0.2, h: 1.5, d: 1 },
+    0,
+    0,
+    0xe5a716
+  ).position.z = -1;
+  createCube({ w: 0.2, h: 1.5, d: 1 }, start_position, -0.35);
+  createCube({ w: 0.2, h: 1.5, d: 1 }, end_position, 0.35);
+}
+createTrack();
 let doll = new Doll();
-setTimeout(() => {
-  doll.lookBackward();
-}, 1000);
-setTimeout(() => {
-  doll.lookForward();
-}, 5000);
 
 function animate() {
   requestAnimationFrame(animate);
