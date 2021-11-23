@@ -32,6 +32,10 @@ scene.add(light);
 // Load a glTF resource
 const loader = new THREE.GLTFLoader();
 
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 class Doll {
   constructor() {
     loader.load(
@@ -67,6 +71,14 @@ class Doll {
 
   lookForward() {
     gsap.to(this.doll.rotation, { y: 0, duration: 1 });
+  }
+
+  async start() {
+    this.lookBackward();
+    await delay(1000 + Math.random() * 5000);
+    this.lookForward();
+    await delay(1000 + Math.random() * 5000);
+    this.start();
   }
 }
 
@@ -111,9 +123,12 @@ class Player {
 }
 
 let player1 = new Player();
-
-createTrack();
 let doll = new Doll();
+createTrack();
+
+setTimeout(() => {
+  doll.start();
+}, 1000);
 
 function animate() {
   requestAnimationFrame(animate);
