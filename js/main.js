@@ -10,6 +10,9 @@ camera.position.z = 5;
 // GLOBAL VARIABLES
 const start_position = 3;
 const end_position = -start_position;
+const text = document.querySelector(".text");
+const TIME_LIMIT = 10;
+let gameState = "loading";
 
 function createCube(size, positionX, rotationY = 0, color = 0xfbc851) {
   const geometry = new THREE.BoxGeometry(size.w, size.h, size.d);
@@ -74,10 +77,12 @@ class Doll {
   }
 
   async start() {
-    this.lookBackward();
-    await delay(1000 + Math.random() * 5000);
-    this.lookForward();
-    await delay(1000 + Math.random() * 5000);
+    if (gameState === "started") {
+      this.lookBackward();
+      await delay(1000 + Math.random() * 1000);
+      this.lookForward();
+      await delay(750 + Math.random() * 750);
+    }
     this.start();
   }
 }
@@ -116,7 +121,10 @@ class Player {
     gsap.to(this.playerInfo, { velocity: 0, duration: 0.1 });
   }
 
+  checkVictory() {}
+
   update() {
+    this.checkVictory();
     this.playerInfo.positionX -= this.playerInfo.velocity;
     this.player.position.x = this.playerInfo.positionX;
   }
@@ -126,9 +134,26 @@ let player1 = new Player();
 let doll = new Doll();
 createTrack();
 
-setTimeout(() => {
+async function init() {
+  await delay(500);
+  // text.innerText = "Starting in 3";
+  await delay(1000);
+  // text.innerText = "Starting in 2";
+  await delay(1000);
+  // text.innerText = "Starting in 1";
+  await delay(1000);
+  // text.innerText = "Go!";
+  startGame();
+}
+init();
+
+function startGame() {
+  let timeBar = createCube({ w: 5, h: 0.1, d: 0.1 }, 0, 0, "green");
+  timeBar.position.y = 3.35;
+  gsap.to(timeBar.scale, { x: 0, duration: TIME_LIMIT, ease: "none" });
+  gameState = "started";
   doll.start();
-}, 1000);
+}
 
 function animate() {
   requestAnimationFrame(animate);
@@ -146,7 +171,7 @@ function onWindowResize() {
 }
 
 window.addEventListener("keydown", (e) => {
-  if (e.key == "ArrowUp") {
+  if (gameState == "started" && e.key == "ArrowUp") {
     player1.run();
   }
 });
