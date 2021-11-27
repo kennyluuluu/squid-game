@@ -13,6 +13,7 @@ const end_position = -start_position;
 const text = document.querySelector(".text");
 const TIME_LIMIT = 10;
 let gameState = "loading";
+let isDollLookingBack = true;
 
 function createCube(size, positionX, rotationY = 0, color = 0xfbc851) {
   const geometry = new THREE.BoxGeometry(size.w, size.h, size.d);
@@ -47,8 +48,8 @@ class Doll {
       // called when the resource is loaded
       (gltf) => {
         scene.add(gltf.scene);
-        gltf.scene.scale.set(0.4, 0.4, 0.4);
-        gltf.scene.position.set(0, -1, 0);
+        gltf.scene.scale.set(0.35, 0.35, 0.35);
+        gltf.scene.position.set(-0, -1.5, 0);
         this.doll = gltf.scene;
 
         gltf.animations; // Array<THREE.AnimationClip>
@@ -70,10 +71,12 @@ class Doll {
 
   lookBackward() {
     gsap.to(this.doll.rotation, { y: -3.15, duration: 1 });
+    setTimeout(()=>{isDollLookingBack = true}, 50);
   }
 
   lookForward() {
     gsap.to(this.doll.rotation, { y: 0, duration: 1 });
+    setTimeout(()=>{isDollLookingBack = false}, 1000);
   }
 
   async start() {
@@ -82,8 +85,8 @@ class Doll {
       await delay(1000 + Math.random() * 1000);
       this.lookForward();
       await delay(750 + Math.random() * 750);
+      this.start();
     }
-    this.start();
   }
 }
 
@@ -121,10 +124,19 @@ class Player {
     gsap.to(this.playerInfo, { velocity: 0, duration: 0.1 });
   }
 
-  checkVictory() {}
+  checkPlayer() {
+    if(this.playerInfo.velocity > 0 && isDollLookingBack == false) {
+      text.innerText = "You Lose";
+      gameState = "lost";
+    }
+    if(this.playerInfo.positionX - 0.5 <= end_position) {
+      text.innerText = "You Win";
+      gameState = "won";
+    }
+  }
 
   update() {
-    this.checkVictory();
+    this.checkPlayer();
     this.playerInfo.positionX -= this.playerInfo.velocity;
     this.player.position.x = this.playerInfo.positionX;
   }
@@ -136,26 +148,33 @@ createTrack();
 
 async function init() {
   await delay(500);
-  // text.innerText = "Starting in 3";
+  text.innerText = "Starting in 3";
   await delay(1000);
-  // text.innerText = "Starting in 2";
+  text.innerText = "Starting in 2";
   await delay(1000);
-  // text.innerText = "Starting in 1";
+  text.innerText = "Starting in 1";
   await delay(1000);
-  // text.innerText = "Go!";
+  text.innerText = "Go!";
   startGame();
 }
 init();
 
 function startGame() {
   let timeBar = createCube({ w: 5, h: 0.1, d: 0.1 }, 0, 0, "green");
-  timeBar.position.y = 3.35;
+  timeBar.position.y = 3;
   gsap.to(timeBar.scale, { x: 0, duration: TIME_LIMIT, ease: "none" });
   gameState = "started";
   doll.start();
+  setTimeout(()=>{
+    if(gameState == "started") {
+      gameState = "lost";
+      text.innerText = "Timeout";
+    }
+}, TIME_LIMIT*1000);
 }
 
 function animate() {
+  if(gameState == "won" || gameState == "lost") return;
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
   player1.update();
